@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>tHC demo</title>
+
+        <script type="text/javascript" src="modules/highcharts.standalone.js"></script>
+        <script type="text/javascript" src="tHC.src.js"></script>
+        <script type="text/javascript" src="modules/themes-default.js"></script>
+        <script type="text/javascript">
+            new tHC.blunt({
+                id: 'tHC-demo1',
+                datasets: [{
+                    name: 'test',
+                    data: [1,2,3,4,5,6,7,8,9]
+                }]
+            });
+        </script>
+        <script type="text/javascript">
+            new tHC.blunt({
+                id: 'tHC-demo2',
+                datasets: [{
+                    url: "data/data.js",
+                    ttl: 15000,
+                    process: function(data) {
+                        return data.root_tab.stats.service.visual.daily_use;
+                    },
+                    period: function(data) {
+                        return data.root_tab.stats.service.visual.daily_use;
+                    }
+                }]
+            });
+        </script>
+    </head>
+    <body>
+        <div id="container">
+            <div id="tHC-demo1"></div>
+            <div id="tHC-demo2"></div>
+        </div>
+    </body>
+</html>
