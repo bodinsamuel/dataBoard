@@ -78,7 +78,7 @@ var tHC = (function () {
 
     tHC.unqueue = function(name)
     {
-        for (var i = 0; i < tHC.queue[name].length; i++) 
+        for (var i = 0; i < tHC.queue[name].length; i++)
         {
             tHC.queue[name][i].callback();
         };
@@ -110,6 +110,8 @@ var tHC = (function () {
             theme: 'default'
         }, opts);
 
+        console.log(options);
+
         options.series = tHC.datasets(options.datasets);
         return tHC.draw[options.type](options);
     }
@@ -134,25 +136,35 @@ var tHC = (function () {
             if (datasets[i].process)
                 datasets[i].data = datasets[i].process(datasets[i].data);
 
+            if (typeof datasets[i].datetime != 'undefined' && typeof datasets[i].data[0] != 'undefined')
+            {
+                datasets[i].pointInterval = datasets[i].datetime;
+                datasets[i].pointStart = datasets[i].data[0][0];
+            }
+
             series.push(Highcharts.merge(true, serie, datasets[i]));
         };
 
         return series;
     }
 
-    tHC.draw.line = function(options)
+    tHC.draw.default = function(options)
     {
         var data = {
             chart: {
                 renderTo: options.id,
+                type: options.type
             },
-            series: options.series
+            series: options.series,
         };
-        var data = Highcharts.merge(true, tHC.themes[options.theme], data);
-        console.log(data, data.chart.renderTo, options);
+
+        var data = Highcharts.merge(true, tHC.themes[options.theme], data, options.config);
         var chart = new Highcharts.Chart(data);
         return chart;
     }
+
+    tHC.draw.line = tHC.draw.default
+    tHC.draw.area = tHC.draw.default
 
     tHC.themes.add = function(name, data)
     {
