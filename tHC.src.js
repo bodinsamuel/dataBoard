@@ -59,21 +59,10 @@ var tHC = (function () {
         tHC.queue[opts.name] = [];
         tHC.queue[opts.name].push(opts);
 
-        var s = document.createElement('script');
-        s.type = 'text/javascript';
-        s.onreadystatechange = function () {
-            if (this.readyState == 'complete')
-            {
-                tHC.loaded[opts.name] = true;
-                return tHC.unqueue(opts.name);
-            }
-        }
-        s.onload = function(){
+        $.getScript(opts.url, function() {
             tHC.loaded[opts.name] = true;
             return tHC.unqueue(opts.name);
-        }
-        s.src = opts.url;
-        document.head.appendChild(s);
+        });
     }
 
     tHC.unqueue = function(name)
@@ -86,20 +75,12 @@ var tHC = (function () {
 
     tHC.load.data = function(url, callback)
     {
-        var httpRequest = new XMLHttpRequest()
-        httpRequest.onreadystatechange = function ()
-        {
-            if (httpRequest.readyState == 4 && httpRequest.status == "200")
-            {
-                callback(JSON.parse(httpRequest.response));
-            }
-            else if (httpRequest.status > "0" && httpRequest.status != "200")
-            {
-                throw "tHC: failed loading " + url;
-            }
-        }
-        httpRequest.open('GET', url, false)
-        httpRequest.send()
+        $.ajax({
+            url: url,
+            type: "json",
+            async: false,
+            success: callback
+        });
     }
 
     tHC.draw = function(opts)
