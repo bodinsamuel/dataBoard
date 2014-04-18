@@ -96,12 +96,18 @@ var tHC = (function () {
         if (options.sources && options.sources.url)
         {
             tHC.sources.process(options);
+            console.log(options)
 
             if (options.sources.ttl)
             {
-                options.sources.interval = setInterval(function(){
-                    console.log('prout');
-                }, parseInt(options.sources.ttl));
+                options.sources.interval = !function(options) {
+                    setInterval(function(){
+                        var now = new Date();
+                        options.sources.params.ttl = parseInt((options.last_drawn.getTime() + parseInt(options.sources.ttl)) / 1000);
+                        tHC.sources.process(options, true);
+                        options.last_drawn = now;
+                    }, parseInt(options.sources.ttl));
+                }(options);
             }
         }
 
@@ -112,14 +118,70 @@ var tHC = (function () {
     }
 
     tHC.sources = {};
-    tHC.sources.process = function(options)
+    tHC.sources.process = function(options, push)
     {
-        tHC.load.data(options.sources.url, function(data) {
-            options.sources.datas = data;
+        console.log(options.sources.url, options.sources.params)
+        $.ajax({
+            async: false,
+            url: options.sources.url,
+            data: options.sources.params || {},
+            success: function(data) {
+                options.sources.datas = data;
 
-            if (options.sources.process)
-                options.sources.series = options.sources.process(options.sources.datas);
+                var series;
+                if (options.sources.process)
+                {
+                    series = options.sources.process(options.sources.datas);
+                }
+                else if (options.sources.describe)
+                {
+                    series = tHC.sources.process_from_describe(options);
+                }
+                if (push === true)
+                    tHC.push({}, series);
+                else
+                    options.sources.series = series;
+            }
         });
+    }
+
+    tHC.dotnotation_to_object = function(object, i)
+    {
+        return object[i];
+    }
+
+    tHC.sources.process_from_describe = function(options)
+    {
+        var series = {};
+        var points = options.sources.describe.pathInJson.split('.').reduce(tHC.dotnotation_to_object, options.sources.datas);
+
+        if (points.length == 0)
+            return series;
+
+        var key_name = (points[0].name) ? 'name' : options.sources.describe.name;
+        var key_date = (points[0].date) ? 'date' : options.sources.describe.name;
+        var key_value = (points[0].value) ? 'value' : options.sources.describe.value;
+        for (var i = 0; i < points.length; i++)
+        {
+            if (points[i][key_date] != null)
+            {
+                var date = new Date(points[i][key_date]);
+                ts = date.getTime() - (date.getTimezoneOffset() * (60 * 1000));
+
+                var alias = (options.sources.describe.alias && options.sources.describe.alias[points[i][key_name]]) ? options.sources.describe.alias[points[i][key_name]] : points[i][key_name];
+
+                if (typeof series[alias] == 'undefined')
+                    series[alias] = {data: []};
+
+                series[alias].data.push([ts, points[i][key_value]]);
+            }
+        };
+        return series;
+    }
+
+    tHC.push = function(instance, series)
+    {
+
     }
 
     tHC.datasets = function(options)
