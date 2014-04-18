@@ -87,26 +87,55 @@ var tHC = (function () {
     {
         var options = Highcharts.merge(true, {
             type: 'line',
+            last_drawn: new Date(),
             datasets: [],
             theme: 'default'
         }, opts);
 
-        console.log(options);
+        // Manages main data sources
+        if (options.sources && options.sources.url)
+        {
+            tHC.sources.process(options);
 
-        options.series = tHC.datasets(options.datasets);
+            if (options.sources.ttl)
+            {
+                options.sources.interval = setInterval(function(){
+                    console.log('prout');
+                }, parseInt(options.sources.ttl));
+            }
+        }
+
+        // Process datasets
+        options.series = tHC.datasets(options);
+
         return tHC.draw[options.type](options);
     }
 
-    tHC.datasets = function(datasets)
+    tHC.sources = {};
+    tHC.sources.process = function(options)
+    {
+        tHC.load.data(options.sources.url, function(data) {
+            options.sources.datas = data;
+
+            if (options.sources.process)
+                options.sources.series = options.sources.process(options.sources.datas);
+        });
+    }
+
+    tHC.datasets = function(options)
     {
         var series = [];
-        var serie = {
-            name: new Date().getTime(),
-            data: []
-        };
 
+        var datasets = options.datasets;
         for (var i = 0; i < datasets.length; i++)
         {
+            // Serie tpl redeclared to avoid copy by reference
+            var serie = {
+                name: new Date().getTime(),
+                data: []
+            };
+
+            // Fetch url if needed
             if (datasets[i].url)
             {
                 tHC.load.data(datasets[i].url, function(data) {
@@ -114,15 +143,22 @@ var tHC = (function () {
                 });
             }
 
+            // Process data
             if (datasets[i].process)
                 datasets[i].data = datasets[i].process(datasets[i].data);
 
+            // Manage datetime, not good for now
             if (typeof datasets[i].datetime != 'undefined' && typeof datasets[i].data[0] != 'undefined')
             {
                 datasets[i].pointInterval = datasets[i].datetime;
                 datasets[i].pointStart = datasets[i].data[0][0];
             }
 
+            // If possible, merge with sources
+            if (options.sources && options.sources.series && options.sources.series[datasets[i].name])
+                datasets[i] = Highcharts.merge(true, options.sources.series[datasets[i].name], datasets[i]);
+
+            // Finally merge tpl + data AND push to series
             series.push(Highcharts.merge(true, serie, datasets[i]));
         };
 
@@ -140,6 +176,7 @@ var tHC = (function () {
         };
 
         var data = Highcharts.merge(true, tHC.themes[options.theme], data, options.config);
+        console.log(data);
         var chart = new Highcharts.Chart(data);
         return chart;
     }
