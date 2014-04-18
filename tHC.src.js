@@ -21,6 +21,8 @@ var tHC = (function () {
                 return function() {
                     var instance = tHC.draw(opts);
                     tHC.instance.push(instance);
+
+                    $('#' + opts.id).data('tHC', instance);
                 }
             }(opts)
         });
@@ -120,7 +122,6 @@ var tHC = (function () {
     tHC.sources = {};
     tHC.sources.process = function(options, push)
     {
-        console.log(options.sources.url, options.sources.params)
         $.ajax({
             async: false,
             url: options.sources.url,
@@ -137,8 +138,10 @@ var tHC = (function () {
                 {
                     series = tHC.sources.process_from_describe(options);
                 }
+
+                // Push
                 if (push === true)
-                    tHC.push({}, series);
+                    tHC.push(options, series);
                 else
                     options.sources.series = series;
             }
@@ -179,9 +182,23 @@ var tHC = (function () {
         return series;
     }
 
-    tHC.push = function(instance, series)
+    tHC.push = function(options, series)
     {
+        var instance = $('#' + options.id).data()['tHC'];
 
+            console.log(series);
+        for (var i = 0; i < options.datasets.length; i++)
+        {
+            console.log(options.datasets[i].name, !!series[options.datasets[i].name]);
+            if (series[options.datasets[i].name])
+            {
+                for (var g = 0; g < series[options.datasets[i].name].data.length; g++)
+                {
+                    console.log(series[options.datasets[i].name].data[g]);
+                    instance.series[i].addPoint(series[options.datasets[i].name].data[g]);
+                }
+            }
+        }
     }
 
     tHC.datasets = function(options)
