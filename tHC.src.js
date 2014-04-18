@@ -186,10 +186,8 @@ var tHC = (function () {
     {
         var instance = $('#' + options.id).data()['tHC'];
 
-            console.log(series);
         for (var i = 0; i < options.datasets.length; i++)
         {
-            console.log(options.datasets[i].name, !!series[options.datasets[i].name]);
             if (series[options.datasets[i].name])
             {
                 for (var g = 0; g < series[options.datasets[i].name].data.length; g++)
