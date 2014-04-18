@@ -22,8 +22,14 @@ var tHC_themes_default = {
         style: {
             color: '#ffffff',
         },
-        snap: 25,
+        snap: 10,
         pointFormat: '{series.name}: <b>{point.y}</b><br/>',
+        xDateFormat: '%A, %d %b %Y, %H:%M',
+        crosshairs: {
+            width: 1,
+            color: '#aaa',
+            dashStyle: 'shortdot'
+        }
     },
     legend:{
         enabled: true,
@@ -52,6 +58,11 @@ var tHC_themes_default = {
             marker: {
                 lineWidth: 1,
                 radius: 2,
+                states: {
+                    hover: {
+                        radius: 3,
+                    }
+                }
             },
             connectNulls: false
         },
