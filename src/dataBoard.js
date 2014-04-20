@@ -24,17 +24,19 @@ dataBoard.prototype.render = function()
 {
     if (this.config.modules && typeof this.config.modules.charts != 'undefined')
     {
-        for (var i = 0; i < this.config.modules.charts.length; i++)
-        {
-            this.chart(i);
-        }
+        !function(that) {
+            dataBoard.loader.script({
+                name: 'Highcharts',
+                url: that.config.baseUrl + 'highcharts.js',
+                callback: function() {
+                    for (var i = 0; i < that.config.modules.charts.length; i++)
+                    {
+                        that.chart(i);
+                    }
+                }
+            });
+        }(this);
     }
-}
-
-dataBoard.prototype.queue = function (options)
-{
-
-    this.queues[options.name] = options;
 }
 
 dataBoard.prototype.sources = function (i, push)
@@ -178,3 +180,56 @@ dataBoard.prototype.figure = function()
 
 dataBoard.themes = {}
 dataBoard.loaded = {}
+dataBoard.queue = function()
+{
+
+}
+dataBoard.queue.add = function(name, cb)
+{
+    if (!dataBoard.queue[name])
+        dataBoard.queue[name] = [];
+
+    dataBoard.queue[name].push(cb);
+}
+dataBoard.queue.empty = function(name)
+{
+    for (var i = 0; i < dataBoard.queue[name].length; i++)
+    {
+        var cb = dataBoard.queue[name].shift();
+        cb();
+    }
+}
+
+dataBoard.loader = {};
+dataBoard.loader.script = function(options)
+{
+    if (typeof dataBoard.loader.isLoaded(options.name) == true)
+        return options.callback();
+
+    if (typeof dataBoard.loader.isLoading(options.name) == true)
+        return dataBoard.queue.add(options.name, options.callback);
+
+    dataBoard.loaded[options.name] = 'doing';
+
+    dataBoard.queue.add(options.name, options.callback);
+
+    !function(options) {
+        $.ajax({
+            cache: true,
+            url: options.url,
+            dataType: "script",
+            success: function() {
+                dataBoard.loaded[options.name] = true;
+                return dataBoard.queue.empty(options.name);
+            }
+        });
+    }(options);
+}
+dataBoard.loader.isLoading = function (name)
+{
+    return !!(typeof dataBoard.loaded[name] == 'doing');
+}
+dataBoard.loader.isLoaded = function (name)
+{
+    return !!(typeof dataBoard.loaded[name] == true);
+}
