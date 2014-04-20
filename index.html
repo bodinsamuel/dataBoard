@@ -26,12 +26,13 @@
                         y: 'value',
                         xIsDate: true
                     },
-                    ttl: 10 * 1000
+                    ttl: 50 * 1000
                 }],
                 modules: {
                     charts: [{
                         id: 'dataBoard--demo1-chart1',
                         type: 'area',
+                        maxPoint: 10,
                         xAxis: [{
                             type: 'datetime',
                         }],
@@ -41,6 +42,16 @@
                         },{
                             name: 'Connection',
                             use: 'sample.nbr_online'
+                        }]
+                    }, {
+                        id: 'dataBoard--demo1-chart2',
+                        maxPoint: 10,
+                        xAxis: [{
+                            type: 'datetime',
+                        }],
+                        series: [{
+                            name: 'Likes',
+                            use: 'sample.nb_likes'
                         }]
                     }],
                     figures: {
@@ -88,6 +99,7 @@
     <body>
         <div id="container">
             <div id="dataBoard--demo1-chart1"></div>
+            <div id="dataBoard--demo1-chart2"></div>
         </div>
         <script type="text/javascript">
             $(document).ready(function() {
