@@ -178,12 +178,36 @@ dataBoard.prototype.chart = function(i)
     if (!config.theme)
         config.theme = this.config.theme;
 
-    for (var i = 0; i < config.series.length; i++)
+    for (var g = 0; g < config.series.length; g++)
     {
-        config.series[i].data = dataBoard.prototype.dotToObject(config.series[i].use + '.data', this.config.datasets);
+        config.series[g].data = dataBoard.prototype.dotToObject(config.series[g].use + '.data', this.config.datasets);
     }
 
     config.instance = dataBoard.prototype.chart[config.type](config);
+}
+
+dataBoard.prototype.chart.pushData = function(i, g, datas)
+{
+    for (var d = 0; d < datas.length; d++)
+    {
+        this.config.modules.charts[i].instance.series[g].addPoint([new Date().getTime(), datas[d][1] + Math.floor((Math.random()*100)+1)]);
+
+        // Remove last point if needed
+        if (this.config.modules.charts[i].maxPoint
+            && this.config.modules.charts[i].instance.series[g].data.length > this.config.modules.charts[i].maxPoint)
+        {
+            // hack to fix highcharts animation when shifting
+            var currentShift = (this.config.modules.charts[i].instance.series[g].graph && this.config.modules.charts[i].instance.series[g].graph.shift) || 0;
+            Highcharts.each([this.config.modules.charts[i].instance.series[g].graph], function (shape) {
+                if (shape) {
+                    shape.shift = currentShift + 1;
+                }
+            });
+
+            //Remove point
+            this.config.modules.charts[i].instance.series[g].data[0].remove(false, false);
+        }
+    }
 }
 
 dataBoard.prototype.chart.default = function(config)
@@ -191,14 +215,14 @@ dataBoard.prototype.chart.default = function(config)
     var data = {
         chart: {
             renderTo: config.id,
-            type: config.type
+            type: config.type,
+            animation: Highcharts.svg,
         },
         series: config.series,
         xAxis: config.xAxis,
     };
 
     var settings = $.extend({}, dataBoard.themes[config.theme], data);
-    console.log(settings);
     return new Highcharts.Chart(settings);
 }
 
