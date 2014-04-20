@@ -135,25 +135,38 @@ dataBoard.prototype.sources.processFromDescribe = function(i, data)
     return series;
 }
 
+dataBoard.prototype.sources.pushToModules = function(name, series)
+{
+    var paths = {};
+    for (subname in series)
+    {
+        var path = name + '.' + subname;
+        paths[path] = path;
+    }
+
+    var datas = {}
+    datas[name] = series
+
+    if (this.config.modules && typeof this.config.modules.charts != 'undefined')
+    {
+        for (var i = 0; i < this.config.modules.charts.length; i++)
+        {
+            for (var g = 0; g < this.config.modules.charts[i].series.length; g++)
+            {
+                var hasPath = this.config.modules.charts[i].series[g].use;
+
+                if (paths[hasPath])
+                {
+                    this.chart.pushData.call(this, i, g, this.dotToObject(this.config.modules.charts[i].series[g].use + '.data', datas));
+                }
+            }
+        }
+    }
+}
+
 dataBoard.prototype.dataset = function (i, datas)
 {
     this.config.datasets[this.config.sources[i].name] = datas;
-}
-
-
-dataBoard.prototype.load = function()
-{
-
-}
-
-dataBoard.prototype.load.data = function()
-{
-
-}
-
-dataBoard.prototype.load.script = function()
-{
-
 }
 
 dataBoard.prototype.chart = function(i)
