@@ -1,4 +1,4 @@
-var tHC_themes_default = {
+var dataBoard_themes_default = {
     chart: {
         borderRadius: 0,
         plotBackgroundColor: null,
@@ -18,7 +18,9 @@ var tHC_themes_default = {
     tooltip: {
         shared: true,
         borderWidth: 0,
-        borderRadius: "2px",shadow: false,backgroundColor: '#444',
+        borderRadius: "2px",
+        shadow: false,
+        backgroundColor: '#444',
         style: {
             color: '#ffffff',
         },
@@ -74,7 +76,7 @@ var tHC_themes_default = {
         }
     },
     yAxis: {
-        gridLineColor: '#f4f4f4',
+        gridLineColor: '#F9F9F9',
         minPadding: 0,
         title: {
             text: null
@@ -86,7 +88,7 @@ var tHC_themes_default = {
         },
         tickLength: 8
     },
-    xAxis: {
+    xAxis: [{
         title: {
             text: null
         },
@@ -97,6 +99,7 @@ var tHC_themes_default = {
             y: 22
         },
         tickLength: 10,
-    },
+    }],
 };
-tHC.themes.add('default', tHC_themes_default);
+
+dataBoard.themes['default'] = dataBoard_themes_default;
