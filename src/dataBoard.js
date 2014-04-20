@@ -6,7 +6,7 @@ function dataBoard(options)
         modules: {},
         sources: [],
         datasets: {},
-        queues: {}
+        interval: {}
     }
 
     $.extend(true, this.config, options);
@@ -42,10 +42,15 @@ dataBoard.prototype.render = function()
 dataBoard.prototype.sources = function (i, push)
 {
     var that = this;
+    if (!that.config.sources[i].params)
+        that.config.sources[i].params = {};
+    if (!that.config.sources[i].lastUpdated)
+        that.config.sources[i].lastUpdated = new Date();
+
     $.ajax({
         async: false,
         url: that.config.sources[i].url,
-        data: that.config.sources[i].params || {},
+        data: that.config.sources[i].params,
         success: function(data) {
 
             var series = JSON.parse(data);
@@ -62,19 +67,33 @@ dataBoard.prototype.sources = function (i, push)
             // Push or create dataset
             if (push === true)
             {
-
+                dataBoard.prototype.sources.pushToModules.call(that, that.config.sources[i].name, series);
             }
             else
             {
                 dataBoard.prototype.dataset.call(that, i, series);
+
+                if (that.config.sources[i].ttl && !that.config.interval[that.config.sources[i].name])
+                {
+                    that.config.interval[that.config.sources[i].name] = !function(that, i){
+                        return setInterval(function(){
+                            var now = new Date();
+                            that.config.sources[i].params.ttl = parseInt((that.config.sources[i].lastUpdated.getTime() + parseInt(that.config.sources[i].ttl)) / 1000);
+                            that.sources.call(that, i, true);
+
+                            that.config.sources[i].lastUpdated = now;
+                        }, parseInt(that.config.sources[i].ttl));
+                    }(that, i);
+                }
             }
         }
     });
 }
+
 dataBoard.prototype.dotToObject = function(path, object)
 {
     return path.split('.').reduce(function(obj, i) {
-        return obj[i];
+        return obj[i] || [];
     }, object);
 }
 
