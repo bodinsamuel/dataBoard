@@ -1,4 +1,6 @@
-tHC
-===
+dataBoard
+=========
 
-tiny HighCharts is an abstraction module to make beautiful and simple charts, with the well know library HighCharts by Highsoft 
+
+dataBoard is an abstraction module to make beautiful dashboard with charts and box for figures.
+Automated with Highcharts and custom libraries.
