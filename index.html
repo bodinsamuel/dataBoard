@@ -1,40 +1,99 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>tHC demo</title>
+        <title>dataBoard</title>
 
-        <script type="text/javascript" src="modules/highcharts.standalone.js"></script>
-        <script type="text/javascript" src="tHC.src.js"></script>
+        <script type="text/javascript" src="src/jquery.js"></script>
+        <script type="text/javascript" src="src/dataBoard.js"></script>
+        <script type="text/javascript" src="modules/highcharts.js"></script>
         <script type="text/javascript" src="modules/themes-default.js"></script>
+
         <script type="text/javascript">
-            new tHC.blunt({
-                id: 'tHC-demo1',
-                datasets: [{
-                    name: 'test',
-                    data: [1,2,3,4,5,6,7,8,9]
-                }]
-            });
-        </script>
-        <script type="text/javascript">
-            new tHC.blunt({
-                id: 'tHC-demo2',
-                datasets: [{
-                    url: "data/data.js",
-                    ttl: 15000,
-                    process: function(data) {
-                        return data.root_tab.stats.service.visual.daily_use;
+            var test1 = new dataBoard();
+            console.log(test1.config);
+
+            var test2 = new dataBoard({
+                baseUrl: '/dataBoard/modules/',
+                sources: [{
+                    name: 'sample',
+                    url: "/dataBoard/sample/stats.json",
+                    params: {
+                        id_event: 0
                     },
-                    period: function(data) {
-                        return data.root_tab.stats.service.visual.daily_use;
+                    describe: {
+                        pathInJson: 'root_tab.points',
+                        name: 'aspect',
+                        x: 'date',
+                        y: 'value',
+                        xIsDate: true
+                    },
+                    ttl: 10 * 1000
+                }],
+                modules: {
+                    charts: [{
+                        id: 'dataBoard--demo1-chart1',
+                        type: 'area',
+                        xAxis: [{
+                            type: 'datetime',
+                        }],
+                        series: [{
+                            name: 'Likes',
+                            use: 'sample.nb_likes'
+                        },{
+                            name: 'Connection',
+                            use: 'sample.nbr_online'
+                        }]
+                    }],
+                    figures: {
+
                     }
-                }]
+                }
             });
+            console.log(test2.config)
+            // new dataBoard({
+            //     config: {
+            //         baseUrl = '/dataBoard/modules/highcharts.js';
+            //     }
+            //     id: 'tHC--demo1',
+            //     type: 'area',
+            //     config: {
+            //         xAxis: {
+            //             type: 'datetime',
+            //         },
+            //     },
+            //     sources: {
+            //         url: "/live/api/stats.json",
+            //         params: {
+            //             id_event: {/literal}{*$tab_live.current_event.id_event*}0{literal}
+            //         },
+            //         ttl: 10 * 1000,
+            //         describe: {
+            //             pathInJson: 'root_tab.points',
+            //             alias: {
+            //                 'nbr_online': 'Online User',
+            //                 'nb_likes': 'Nb Likes',
+            //             },
+            //             name: 'aspect',
+            //             date: 'date',
+            //             value: 'value'
+            //         }
+            //     },
+            //     datasets: [{
+            //         name: 'Online User'
+            //     }, {
+            //         name: 'Nb Likes'
+            //     }]
+            // });
         </script>
     </head>
     <body>
         <div id="container">
-            <div id="tHC-demo1"></div>
-            <div id="tHC-demo2"></div>
+            <div id="dataBoard--demo1-chart1"></div>
         </div>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                test2.render();
+            });
+        </script>
     </body>
 </html>
