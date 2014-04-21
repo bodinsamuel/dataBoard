@@ -20,22 +20,50 @@ function dataBoard(options)
     }
 }
 
-dataBoard.prototype.render = function()
+dataBoard.prototype.destroy = function()
 {
     if (this.config.modules && typeof this.config.modules.charts != 'undefined')
     {
-        !function(that) {
-            dataBoard.loader.script({
-                name: 'Highcharts',
-                url: that.config.baseUrl + 'highcharts.js',
-                callback: function() {
-                    for (var i = 0; i < that.config.modules.charts.length; i++)
-                    {
-                        that.chart(i);
+        for (var i = 0; i < this.config.modules.charts.length; i++)
+        {
+            this.config.modules.charts[i].instance.destroy();
+        }
+    }
+
+    this.config = null;
+}
+
+dataBoard.prototype.render = function()
+{
+    if (this.config.modules)
+    {
+        // Charts
+        if (typeof this.config.modules.charts != 'undefined')
+        {
+            !function(that) {
+                dataBoard.loader.script({
+                    name: 'Highcharts',
+                    url: that.config.baseUrl + 'highcharts.js',
+                    callback: function() {
+                        for (var i = 0; i < that.config.modules.charts.length; i++)
+                        {
+                            if (!that.config.modules.charts[i].rendered)
+                                that.chart(i);
+                        }
                     }
-                }
-            });
-        }(this);
+                });
+            }(this);
+        }
+
+        // Figures
+        if (typeof this.config.modules.figures != 'undefined')
+        {
+            for (var i = 0; i < this.config.modules.figures.length; i++)
+            {
+                if (!this.config.modules.figures[i].rendered)
+                    this.figure.call(this, i);
+            }
+        }
     }
 }
 
