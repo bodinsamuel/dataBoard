@@ -128,8 +128,19 @@ dataBoard.prototype.dotToObject = function(path, object)
 dataBoard.prototype.sources.processFromDescribe = function(i, data)
 {
     var series = {};
-    var config = this.config.sources[i];
-    var points = dataBoard.prototype.dotToObject(config.describe.pathInJson, data);
+    if (this.config.sources[i].describe.chart)
+        series.charts = dataBoard.prototype.sources.processFromDescribe.charts.call(this, i, data);
+    if (this.config.sources[i].describe.figure)
+        series.figures = dataBoard.prototype.sources.processFromDescribe.figures.call(this, i, data);
+
+    return series;
+}
+
+dataBoard.prototype.sources.processFromDescribe.charts = function(i, data)
+{
+    var series = {};
+    var describe = this.config.sources[i].describe.chart;
+    var points = dataBoard.prototype.dotToObject(describe.pathInJson, data);
 
     if (typeof points == 'undefined')
         return false;
@@ -137,16 +148,16 @@ dataBoard.prototype.sources.processFromDescribe = function(i, data)
     if (points.length == 0)
         return series;
 
-    var key_name = (points[0].name) ? 'name' : config.describe.name;
-    var key_x = (points[0].x) ? 'x' : config.describe.x;
-    var key_y = (points[0].y) ? 'y' : config.describe.y;
+    var key_name = (points[0].name) ? 'name' : describe.name;
+    var key_x = (points[0].x) ? 'x' : describe.x;
+    var key_y = (points[0].y) ? 'y' : describe.y;
     for (var i = 0; i < points.length; i++)
     {
-        if (points[i][key_x] == null || points[i][key_y] == null)
+        if (points[i][key_x] == null || points[i][key_y] == null || points[i][key_name] == null)
             continue;
 
         var x = points[i][key_x];
-        if (config.describe.xIsDate == true)
+        if (describe.xIsDate == true)
         {
             var date = new Date(points[i][key_x]);
             x = date.getTime() - (date.getTimezoneOffset() * (60 * 1000));
@@ -159,6 +170,36 @@ dataBoard.prototype.sources.processFromDescribe = function(i, data)
 
         series[alias].data.push([x, points[i][key_y]]);
     };
+
+    return series;
+}
+
+dataBoard.prototype.sources.processFromDescribe.figures = function(i, data)
+{
+    var series = {};
+    var describe = this.config.sources[i].describe.figure;
+    var figures = dataBoard.prototype.dotToObject(describe.pathInJson, data);
+
+    if (typeof figures == 'undefined')
+        return false;
+
+    if (figures.length == 0)
+        return series;
+
+    var key_legend = (figures[0].legend) ? 'legend' : describe.legend;
+    var key_value = (figures[0].value) ? 'value' : describe.value;
+    for (var i = 0; i < figures.length; i++)
+    {
+        if (figures[i][key_legend] == null)
+            continue;
+
+        var legend = figures[i][key_legend];
+
+        if (typeof series[legend] == 'undefined')
+            series[legend] = {data: []};
+
+        series[legend].data.push({legend: legend, value: figures[i][key_value]});
+    }
 
     return series;
 }
