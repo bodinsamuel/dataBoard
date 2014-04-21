@@ -341,15 +341,16 @@ dataBoard.queue.empty = function(name)
 }
 
 dataBoard.loader = {};
+dataBoard.loader.loaded = {}
 dataBoard.loader.script = function(options)
 {
-    if (typeof dataBoard.loader.isLoaded(options.name) == true)
+    if (dataBoard.loader.isLoaded(options.name) == true)
         return options.callback();
 
-    if (typeof dataBoard.loader.isLoading(options.name) == true)
+    if (dataBoard.loader.isLoading(options.name) == true)
         return dataBoard.queue.add(options.name, options.callback);
 
-    dataBoard.loaded[options.name] = 'doing';
+    dataBoard.loader.loaded[options.name] = 'doing';
 
     dataBoard.queue.add(options.name, options.callback);
 
@@ -359,7 +360,7 @@ dataBoard.loader.script = function(options)
             url: options.url,
             dataType: "script",
             success: function() {
-                dataBoard.loaded[options.name] = true;
+                dataBoard.loader.loaded[options.name] = true;
                 return dataBoard.queue.empty(options.name);
             }
         });
