@@ -253,6 +253,7 @@ dataBoard.prototype.chart = function(i)
     }
 
     config.instance = dataBoard.prototype.chart[config.type](config);
+    config.rendered = true;
 }
 
 dataBoard.prototype.chart.pushData = function(i, g, datas)
@@ -298,13 +299,27 @@ dataBoard.prototype.chart.default = function(config)
 dataBoard.prototype.chart.line = dataBoard.prototype.chart.default;
 dataBoard.prototype.chart.area = dataBoard.prototype.chart.default;
 
-dataBoard.prototype.figure = function()
+
+dataBoard.prototype.figure = function(i)
+{
+    var config = this.config.modules.figures[i];
+    config.data = dataBoard.prototype.dotToObject(config.use + '.data', this.config.datasets);
+
+    config.instance = new dataBoard_Figure({
+        renderTo: config.id,
+        data: config.data[0],
+        render: true
+    });
+    config.rendered = true;
+}
+
+dataBoard.prototype.figure.pushData = function()
 {
 
 }
 
+
 dataBoard.themes = {}
-dataBoard.loaded = {}
 dataBoard.queue = function()
 {
 
@@ -352,9 +367,32 @@ dataBoard.loader.script = function(options)
 }
 dataBoard.loader.isLoading = function (name)
 {
-    return !!(typeof dataBoard.loaded[name] == 'doing');
+    return (typeof dataBoard.loader.loaded[name] != 'undefined' && dataBoard.loader.loaded[name] == 'doing');
 }
 dataBoard.loader.isLoaded = function (name)
 {
-    return !!(typeof dataBoard.loaded[name] == true);
+    return (typeof dataBoard.loader.loaded[name] != 'undefined' && dataBoard.loader.loaded[name] == true);
+}
+
+
+function dataBoard_Figure(options)
+{
+    this.selector = $('#' + options.renderTo);
+    this.legend = options.data.legend;
+    this.data = options.data;
+
+    if (options.render == true)
+        this.render();
+}
+
+dataBoard_Figure.prototype.render = function()
+{
+    this.selector.find('.legend').text(this.legend);
+    this.selector.find('.value').text(this.data.value);
+}
+
+dataBoard_Figure.prototype.push = function(data)
+{
+    this.data = data;
+    this.render();
 }
