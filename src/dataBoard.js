@@ -80,8 +80,7 @@ dataBoard.prototype.sources = function (i, push)
         url: that.config.sources[i].url,
         data: that.config.sources[i].params,
         success: function(data) {
-
-            var series = JSON.parse(data);
+            var series = data;
             // Preprocess data
             if (that.config.sources[i].process)
             {
@@ -106,7 +105,7 @@ dataBoard.prototype.sources = function (i, push)
                     that.config.interval[that.config.sources[i].name] = !function(that, i){
                         return setInterval(function(){
                             var now = new Date();
-                            that.config.sources[i].params.ttl = parseInt((that.config.sources[i].lastUpdated.getTime() + parseInt(that.config.sources[i].ttl)) / 1000);
+                            that.config.sources[i].params.ttl = parseInt(that.config.sources[i].lastUpdated.getTime() / 1000);
                             that.sources.call(that, i, true);
 
                             that.config.sources[i].lastUpdated = now;
@@ -211,10 +210,16 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
     {
         var path = name + '.' + subname;
         paths[path] = path;
+        for (subsubname in series[subname])
+        {
+            path = path + '.' + subsubname;
+            paths[path] = path;
+        }
     }
 
     var datas = {}
     datas[name] = series
+    console.log(name, paths, series);
 
     if (this.config.modules && typeof this.config.modules.charts != 'undefined')
     {
@@ -223,9 +228,11 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
             for (var g = 0; g < this.config.modules.charts[i].series.length; g++)
             {
                 var hasPath = this.config.modules.charts[i].series[g].use;
+                console.log(hasPath);
 
                 if (paths[hasPath])
                 {
+                    console.log('pushiiiiiiiiiiiiiing', hasPath, this.dotToObject(this.config.modules.charts[i].series[g].use + '.data', datas));
                     this.chart.pushData.call(this, i, g, this.dotToObject(this.config.modules.charts[i].series[g].use + '.data', datas));
                 }
             }
@@ -260,7 +267,24 @@ dataBoard.prototype.chart.pushData = function(i, g, datas)
 {
     for (var d = 0; d < datas.length; d++)
     {
-        this.config.modules.charts[i].instance.series[g].addPoint([new Date().getTime(), datas[d][1] + Math.floor((Math.random()*100)+1)]);
+        // Try to deduplicate last data
+        if (this.config.modules.charts[i].updateOnDuplicateX)
+        {
+            var length = this.config.modules.charts[i].instance.series[g].data.length;
+            if (length > 0)
+            {
+                var last = this.config.modules.charts[i].instance.series[g].data[length-1];
+                if (last.x == datas[d][0])
+                {
+                    last.update([datas[d][0], datas[d][1]]);
+                    continue
+                }
+            }
+        }
+
+        // add a new point
+        this.config.modules.charts[i].instance.series[g].addPoint([datas[d][0], datas[d][1]]);
+
 
         // Remove last point if needed
         if (this.config.modules.charts[i].maxPoint
@@ -379,7 +403,7 @@ dataBoard.loader.isLoaded = function (name)
 function dataBoard_Figure(options)
 {
     this.selector = $('#' + options.renderTo);
-    this.legend = options.data.legend;
+    this.legend = options.data.legend || "legend";
     this.data = options.data;
 
     if (options.render == true)
