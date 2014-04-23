@@ -9,7 +9,7 @@ function dataBoard(options)
         interval: {}
     }
 
-    $.extend(true, this.config, options);
+    this.config = $.extend(true, {}, this.config, options);
 
     if (this.config.sources.length > 0)
     {
@@ -313,7 +313,9 @@ dataBoard.prototype.chart.default = function(config)
         xAxis: config.xAxis,
     };
 
-    var settings = $.extend({}, dataBoard.themes[config.theme], data);
+dataBoard.prototype.chart.default = function(config)
+{
+    var settings = $.extend(true, {}, dataBoard.themes[config.theme], config);
     return new Highcharts.Chart(settings);
 }
 
