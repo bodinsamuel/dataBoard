@@ -150,24 +150,29 @@ dataBoard.prototype.sources.processFromDescribe.charts = function(i, data)
     var key_name = (points[0].name) ? 'name' : describe.name;
     var key_x = (points[0].x) ? 'x' : describe.x;
     var key_y = (points[0].y) ? 'y' : describe.y;
-    for (var i = 0; i < points.length; i++)
+
+    // Classic
+    for (var g = 0; g < points.length; g++)
     {
-        if (points[i][key_x] == null || points[i][key_y] == null || points[i][key_name] == null)
+        if (points[g][key_x] == null || points[g][key_y] == null || points[g][key_name] == null)
             continue;
 
-        var x = points[i][key_x];
+        var x = points[g][key_x];
         if (describe.xIsDate == true)
         {
-            var date = new Date(points[i][key_x]);
+            var date = new Date(points[g][key_x]);
             x = date.getTime() - (date.getTimezoneOffset() * (60 * 1000));
         }
 
-        var alias = points[i][key_name];
+        var alias = points[g][key_name];
 
         if (typeof series[alias] == 'undefined')
             series[alias] = {data: []};
 
-        series[alias].data.push([x, points[i][key_y]]);
+        if (this.config.sources[i].period && (!this.config.sources[i].period.lastDate || this.config.sources[i].period.lastDate < x))
+            this.config.sources[i].period.lastDate = x;
+
+        series[alias].data.push([x, points[g][key_y]]);
     };
 
     return series;
