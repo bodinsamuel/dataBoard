@@ -383,17 +383,12 @@ dataBoard.prototype.chart.pushData = function(i, g, datas)
     }
 }
 
-dataBoard.prototype.chart.default = function(config)
+dataBoard.prototype.chart.defaultZoom = function(i)
 {
-    var data = {
-        chart: {
-            renderTo: config.id,
-            type: config.type,
-            animation: Highcharts.svg,
-        },
-        series: config.series,
-        xAxis: config.xAxis,
-    };
+    var d = new Date();
+    this.config.modules.charts[i].instance.xAxis[0].setExtremes(this.config.modules.charts[i].lastDate - this.config.modules.charts[i].defaultZoom, this.config.modules.charts[i].lastDate);
+    this.config.modules.charts[i].instance.showResetZoom();
+}
 
 dataBoard.prototype.chart.default = function(config)
 {
