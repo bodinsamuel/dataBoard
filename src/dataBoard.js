@@ -219,7 +219,6 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
 
     var datas = {}
     datas[name] = series
-    console.log(name, paths, series);
 
     if (this.config.modules && typeof this.config.modules.charts != 'undefined')
     {
@@ -228,11 +227,9 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
             for (var g = 0; g < this.config.modules.charts[i].series.length; g++)
             {
                 var hasPath = this.config.modules.charts[i].series[g].use;
-                console.log(hasPath);
 
                 if (paths[hasPath])
                 {
-                    console.log('pushiiiiiiiiiiiiiing', hasPath, this.dotToObject(this.config.modules.charts[i].series[g].use + '.data', datas));
                     this.chart.pushData.call(this, i, g, this.dotToObject(this.config.modules.charts[i].series[g].use + '.data', datas));
                 }
             }
