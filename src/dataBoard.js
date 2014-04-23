@@ -258,6 +258,55 @@ dataBoard.prototype.dataset = function (i, datas)
     this.config.datasets[this.config.sources[i].name] = datas;
 }
 
+dataBoard.prototype.dataset.fillWithNull = function(fromSource, datas)
+{
+    var period = this.config.sources[fromSource].period;
+    var diff = (period.end - period.start) / (period.interval);
+
+    var interval = period.start - period.interval;
+    var data = [];
+    var offset = new Date().getTimezoneOffset();
+
+    var sorted = [];
+    for (var i = datas.data.length - 1; i >= 0; i--)
+    {
+        sorted[datas.data[i][0]] = datas.data[i];
+    }
+
+    var done = 0;
+    for (var i = 0; i <= diff; i++)
+    {
+        interval += period.interval;
+        if (interval >= this.config.sources[fromSource].period.lastDate && period.lastPointIsEnd)
+        {
+            console.log('last point is end')
+            break;
+        }
+
+        if (sorted[interval])
+        {
+            data.push(sorted[interval]);
+            done++;
+        }
+        else
+        {
+            data.push([interval, 0]);
+        }
+    }
+
+    return data;
+}
+
+dataBoard.prototype.getSourceFromName = function (name)
+{
+    for (var i = this.config.sources.length - 1; i >= 0; i--)
+    {
+        if (this.config.sources[i].name == name)
+            return i;
+    }
+    return false;
+}
+
 dataBoard.prototype.chart = function(i)
 {
     var config = this.config.modules.charts[i];
