@@ -217,25 +217,42 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
         paths[path] = path;
         for (subsubname in series[subname])
         {
-            path = path + '.' + subsubname;
-            paths[path] = path;
+            var _path = path + '.' + subsubname;
+            paths[_path] = _path;
         }
     }
 
     var datas = {}
     datas[name] = series
 
-    if (this.config.modules && typeof this.config.modules.charts != 'undefined')
+    if (this.config.modules)
     {
-        for (var i = 0; i < this.config.modules.charts.length; i++)
+        // Charts
+        if (typeof this.config.modules.charts != 'undefined')
         {
-            for (var g = 0; g < this.config.modules.charts[i].series.length; g++)
+            for (var i = 0; i < this.config.modules.charts.length; i++)
             {
-                var hasPath = this.config.modules.charts[i].series[g].use;
+                for (var g = 0; g < this.config.modules.charts[i].series.length; g++)
+                {
+                    var hasPath = this.config.modules.charts[i].series[g].use;
 
+                    if (paths[hasPath])
+                    {
+                        this.chart.pushData.call(this, i, g, this.dotToObject(this.config.modules.charts[i].series[g].use + '.data', datas));
+                    }
+                }
+            }
+        }
+
+        // Figures
+        if (typeof this.config.modules.figures != 'undefined')
+        {
+            for (var i = 0; i < this.config.modules.figures.length; i++)
+            {
+                var hasPath = this.config.modules.figures[i].use;
                 if (paths[hasPath])
                 {
-                    this.chart.pushData.call(this, i, g, this.dotToObject(this.config.modules.charts[i].series[g].use + '.data', datas));
+                    this.figure.pushData.call(this, i, this.dotToObject(this.config.modules.figures[i].use + '.data', datas)[0]);
                 }
             }
         }
@@ -278,10 +295,7 @@ dataBoard.prototype.dataset.fillWithNull = function(fromSource, datas)
     {
         interval += period.interval;
         if (interval >= this.config.sources[fromSource].period.lastDate && period.lastPointIsEnd)
-        {
-            console.log('last point is end')
             break;
-        }
 
         if (sorted[interval])
         {
@@ -413,9 +427,9 @@ dataBoard.prototype.figure = function(i)
     config.rendered = true;
 }
 
-dataBoard.prototype.figure.pushData = function()
+dataBoard.prototype.figure.pushData = function(i, data)
 {
-
+    this.config.modules.figures[i].instance.push(data);
 }
 
 
@@ -479,8 +493,7 @@ dataBoard.loader.isLoaded = function (name)
 function dataBoard_Figure(options)
 {
     this.selector = $('#' + options.renderTo);
-    this.legend = options.data.legend || "legend";
-    this.data = options.data;
+    this.data = options.data || {value: 0};
 
     if (options.render == true)
         this.render();
@@ -488,7 +501,6 @@ function dataBoard_Figure(options)
 
 dataBoard_Figure.prototype.render = function()
 {
-    this.selector.find('.legend').text(this.legend);
     this.selector.find('.value').text(this.data.value);
 }
 
