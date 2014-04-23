@@ -244,6 +244,17 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
 
 dataBoard.prototype.dataset = function (i, datas)
 {
+    // Fill with null awesome
+    if (this.config.sources[i].describe.chart.xIsDate == true
+        && this.config.sources[i].period
+        && this.config.sources[i].period.fillWithNull == true)
+    {
+        for (name in datas.charts)
+        {
+            datas.charts[name].data = this.dataset.fillWithNull.call(this, i, datas.charts[name]);
+        }
+    }
+
     this.config.datasets[this.config.sources[i].name] = datas;
 }
 
