@@ -315,14 +315,31 @@ dataBoard.prototype.chart = function(i)
         config.type = 'line';
     if (!config.theme)
         config.theme = this.config.theme;
+    if (!config.plotOptions)
+        config.plotOptions = {};
+    if (!config.plotOptions.series)
+        config.plotOptions.series = {};
 
     for (var g = 0; g < config.series.length; g++)
     {
         config.series[g].data = dataBoard.prototype.dotToObject(config.series[g].use + '.data', this.config.datasets);
+
+        var fromSource = this.getSourceFromName(config.series[g].use.split('.')[0]);
+        if (fromSource !== false && fromSource >= 0)
+        {
+            if (this.config.sources[fromSource].period)
+            {
+                config.plotOptions.series.pointStart = this.config.sources[fromSource].period.start;
+                config.lastDate = this.config.sources[fromSource].period.lastDate;
+            }
+        }
     }
 
     config.instance = dataBoard.prototype.chart[config.type](config);
     config.rendered = true;
+
+    if (config.defaultZoom)
+        dataBoard.prototype.chart.defaultZoom.call(this, i);
 }
 
 dataBoard.prototype.chart.pushData = function(i, g, datas)
@@ -339,7 +356,7 @@ dataBoard.prototype.chart.pushData = function(i, g, datas)
                 if (last.x == datas[d][0])
                 {
                     last.update([datas[d][0], datas[d][1]]);
-                    continue
+                    continue;
                 }
             }
         }
