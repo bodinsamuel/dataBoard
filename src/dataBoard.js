@@ -167,12 +167,12 @@ dataBoard.prototype.sources.processFromDescribe.charts = function(i, data)
         var alias = points[g][key_name];
 
         if (typeof series[alias] == 'undefined')
-            series[alias] = {data: []};
+            series[alias] = [];
 
         if (this.config.sources[i].period && (!this.config.sources[i].period.lastDate || this.config.sources[i].period.lastDate < x))
             this.config.sources[i].period.lastDate = x;
 
-        series[alias].data.push([x, points[g][key_y]]);
+        series[alias].push([x, points[g][key_y]]);
     };
 
     return series;
@@ -190,19 +190,19 @@ dataBoard.prototype.sources.processFromDescribe.figures = function(i, data)
     if (figures.length == 0)
         return series;
 
-    var key_legend = (figures[0].legend) ? 'legend' : describe.legend;
+    var key_name = (figures[0].name) ? 'name' : describe.name;
     var key_value = (figures[0].value) ? 'value' : describe.value;
     for (var i = 0; i < figures.length; i++)
     {
-        if (figures[i][key_legend] == null)
+        if (figures[i][key_name] == null)
             continue;
 
-        var legend = figures[i][key_legend];
+        var name = figures[i][key_name];
 
-        if (typeof series[legend] == 'undefined')
-            series[legend] = {data: []};
+        if (typeof series[name] == 'undefined')
+            series[name] = [];
 
-        series[legend].data.push({legend: legend, value: figures[i][key_value]});
+        series[name] = {value: figures[i][key_value]};
     }
 
     return series;
@@ -238,7 +238,7 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
 
                     if (paths[hasPath])
                     {
-                        this.chart.pushData.call(this, i, g, this.dotToObject(this.config.modules.charts[i].series[g].use + '.data', datas));
+                        this.chart.pushData.call(this, i, g, this.dotToObject(this.config.modules.charts[i].series[g].use, datas));
                     }
                 }
             }
@@ -251,11 +251,10 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
             {
                 for (var g in this.config.modules.figures[i].series)
                 {
-                    console.log(this.config.modules.figures[i].series[g]);
                     var hasPath = this.config.modules.figures[i].series[g].use;
                     if (paths[hasPath])
                     {
-                        this.figure.pushData.call(this, i, this.dotToObject(this.config.modules.figures[i].series[g].use + '.data', datas)[0]);
+                        this.figure.pushData.call(this, i, this.dotToObject(this.config.modules.figures[i].series[g].use, datas));
                     }
                 }
             }
@@ -289,9 +288,9 @@ dataBoard.prototype.dataset.fillWithNull = function(fromSource, datas)
     var offset = new Date().getTimezoneOffset();
 
     var sorted = [];
-    for (var i = datas.data.length - 1; i >= 0; i--)
+    for (var i = datas.length - 1; i >= 0; i--)
     {
-        sorted[datas.data[i][0]] = datas.data[i];
+        sorted[datas[i][0]] = datas[i];
     }
 
     var done = 0;
@@ -340,7 +339,7 @@ dataBoard.prototype.chart = function(i)
 
     for (var g = 0; g < config.series.length; g++)
     {
-        config.series[g].data = dataBoard.prototype.dotToObject(config.series[g].use + '.data', this.config.datasets);
+        config.series[g].data = dataBoard.prototype.dotToObject(config.series[g].use, this.config.datasets);
 
         var fromSource = this.getSourceFromName(config.series[g].use.split('.')[0]);
         if (fromSource !== false && fromSource >= 0)
@@ -428,7 +427,7 @@ dataBoard.prototype.figure = function(i)
     var config = this.config.modules.figures[i];
     for (var g in this.config.modules.figures[i].series)
     {
-        config.series[g].data = dataBoard.prototype.dotToObject(config.series[g].use + '.data', this.config.datasets);
+        config.series[g].value = dataBoard.prototype.dotToObject(config.series[g].use, this.config.datasets).value;
     }
 
     config.instance = new dataBoard_Figure(config);
@@ -437,7 +436,7 @@ dataBoard.prototype.figure = function(i)
 
 dataBoard.prototype.figure.pushData = function(i, data)
 {
-    this.config.modules.figures[i].instance.push(data);
+    this.config.modules.figures[i].instance.push('main', data);
 }
 
 
@@ -558,7 +557,7 @@ var dataBoard_Figure = (function() {
 
     dataBoard_Figure.prototype.push = function(name, data)
     {
-        this.series[name] = data;
+        this.series[name].value = parseInt(data.value);
         this.render();
     }
 
