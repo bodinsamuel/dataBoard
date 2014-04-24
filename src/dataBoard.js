@@ -76,7 +76,9 @@ dataBoard.prototype.sources = function (i, push)
     if (!that.config.sources[i].params)
         that.config.sources[i].params = {};
     if (!that.config.sources[i].lastUpdated)
-        that.config.sources[i].lastUpdated = new Date();
+    {
+        that.config.sources[i].lastUpdated = new Date().getTime() - that.config.date.offset;
+    }
 
     $.ajax({
         async: false,
@@ -107,8 +109,8 @@ dataBoard.prototype.sources = function (i, push)
                 {
                     that.config.interval[that.config.sources[i].name] = !function(that, i){
                         return setInterval(function(){
-                            var now = new Date();
-                            that.config.sources[i].params.ttl = parseInt(that.config.sources[i].lastUpdated.getTime() / 1000);
+                            var now = new Date().getTime() - that.config.date.offset;
+                            that.config.sources[i].params.ttl = parseInt((that.config.sources[i].lastUpdated + that.config.date.offset) / 1000);
                             that.sources.call(that, i, true);
 
                             that.config.sources[i].lastUpdated = now;
@@ -164,7 +166,7 @@ dataBoard.prototype.sources.processFromDescribe.charts = function(i, data)
         if (describe.xIsDate == true)
         {
             var date = new Date(points[g][key_x]);
-            x = date.getTime() - (date.getTimezoneOffset() * (60 * 1000));
+            x = date.getTime() - this.config.date.offset;
         }
 
         var alias = points[g][key_name];
@@ -243,6 +245,14 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
                     {
                         this.chart.pushData.call(this, i, g, this.dotToObject(this.config.modules.charts[i].series[g].use, datas));
                     }
+                    else
+                    {
+                        if (this.config.sources[i].period && this.config.sources[i].period.fillWithNull == true)
+                        {
+                            var date = (Math.floor(parseInt(this.config.sources[i].lastUpdated/1000)/60) * 60000) + this.config.sources[i].period.interval ;
+                            this.chart.pushData.call(this, i, g, [[date, 0]]);
+                        }
+                    }
                 }
             }
         }
@@ -274,7 +284,7 @@ dataBoard.prototype.dataset = function (i, datas)
     {
         for (name in datas.charts)
         {
-            datas.charts[name].data = this.dataset.fillWithNull.call(this, i, datas.charts[name]);
+            datas.charts[name] = this.dataset.fillWithNull.call(this, i, datas.charts[name]);
         }
     }
 
@@ -286,9 +296,8 @@ dataBoard.prototype.dataset.fillWithNull = function(fromSource, datas)
     var period = this.config.sources[fromSource].period;
     var diff = (period.end - period.start) / (period.interval);
 
-    var interval = period.start - period.interval;
     var data = [];
-    var offset = new Date().getTimezoneOffset();
+    var interval = (period.start - this.config.date.offset) - period.interval;
 
     var sorted = [];
     for (var i = datas.length - 1; i >= 0; i--)
@@ -351,6 +360,12 @@ dataBoard.prototype.chart = function(i)
             {
                 config.plotOptions.series.pointStart = this.config.sources[fromSource].period.start;
                 config.lastDate = this.config.sources[fromSource].period.lastDate;
+
+                // Fill with null empty datasets
+                if (config.series[g].data.length == 0 && this.config.sources[fromSource].period.fillWithNull == true)
+                {
+                    config.series[g].data = this.dataset.fillWithNull.call(this, fromSource, config.series[g].data);
+                }
             }
         }
     }
@@ -366,6 +381,7 @@ dataBoard.prototype.chart.pushData = function(i, g, datas)
 {
     for (var d = 0; d < datas.length; d++)
     {
+        console.log(this.config.modules.charts[i].instance.series[g].name, datas[d][0], datas[d][i]);
         // Try to deduplicate last data
         if (this.config.modules.charts[i].updateOnDuplicateX)
         {
@@ -373,7 +389,7 @@ dataBoard.prototype.chart.pushData = function(i, g, datas)
             if (length > 0)
             {
                 var last = this.config.modules.charts[i].instance.series[g].data[length-1];
-                if (last.x == datas[d][0])
+                if (last.x == datas[d][0] && last.y <= datas[d][1])
                 {
                     last.update([datas[d][0], datas[d][1]]);
                     continue;
