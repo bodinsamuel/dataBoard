@@ -310,7 +310,9 @@ dataBoard.prototype.dataset.fillWithNull = function(fromSource, datas)
     {
         interval += period.interval;
         if (interval >= this.config.sources[fromSource].period.lastDate && period.lastPointIsEnd)
+        {
             break;
+        }
 
         if (sorted[interval])
         {
@@ -381,7 +383,6 @@ dataBoard.prototype.chart.pushData = function(i, g, datas)
 {
     for (var d = 0; d < datas.length; d++)
     {
-        console.log(this.config.modules.charts[i].instance.series[g].name, datas[d][0], datas[d][i]);
         // Try to deduplicate last data
         if (this.config.modules.charts[i].updateOnDuplicateX)
         {
