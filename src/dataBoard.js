@@ -31,6 +31,11 @@ dataBoard.prototype.destroy = function()
         {
             this.config.modules.charts[i].instance.destroy();
         }
+
+        for (var name in this.config.interval)
+        {
+            clearInterval(this.config.interval[name]);
+        }
     }
 
     this.config = null;
@@ -107,7 +112,7 @@ dataBoard.prototype.sources = function (i, push)
 
                 if (that.config.sources[i].ttl && !that.config.interval[that.config.sources[i].name])
                 {
-                    that.config.interval[that.config.sources[i].name] = !function(that, i){
+                    that.config.interval[that.config.sources[i].name] = (function(that, i){
                         return setInterval(function(){
                             var now = new Date().getTime() - that.config.date.offset;
                             that.config.sources[i].params.ttl = parseInt((that.config.sources[i].lastUpdated + that.config.date.offset) / 1000);
@@ -115,7 +120,8 @@ dataBoard.prototype.sources = function (i, push)
 
                             that.config.sources[i].lastUpdated = now;
                         }, parseInt(that.config.sources[i].ttl));
-                    }(that, i);
+                    }(that, i));
+                    console.log(that.config.interval);
                 }
             }
         }
