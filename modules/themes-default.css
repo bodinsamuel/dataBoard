@@ -1,0 +1,27 @@
+.dataBoard-figures {
+    margin: 10px 0;
+}
+.dataBoard-figures:after {
+    content: " ";
+    display: block;
+    clear: both;
+}
+.dataBoard-figure {
+    text-align: center;
+    padding: 10px;
+    margin: 10px;
+    width: 100%;
+    float: left;
+    display: inline-block;
+    border: 2px solid #eee;
+    border-radius: 4px;
+    max-width: 150px;
+}
+.dataBoard-figure .value {
+    font-size: 45px;
+    font-weight: bold;
+    line-height: 60px;
+}
+.dataBoard-figure .legend {
+    color: #777;
+}
