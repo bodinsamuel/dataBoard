@@ -493,22 +493,70 @@ dataBoard.loader.isLoaded = function (name)
 }
 
 
-function dataBoard_Figure(options)
-{
-    this.selector = $('#' + options.renderTo);
-    this.data = options.data || {value: 0};
+var dataBoard_Figure = (function() {
+    function dataBoard_Figure(options)
+    {
+        this.config = {
+            id: '',
+            animation: {
+                bg: true,
+                figure: true,
+                helper: true
+            },
+            series: null
+        }
 
-    if (options.render == true)
+        this.series = {};
+
+        this.config = $.extend(true, {}, this.config, options);
+
+        if (this.config.id == null)
+            throw 'Figure-- a figure need an id';
+
+        this.config.$selector = $('#' + this.config.id);
+
+        if (this.config.series)
+        {
+            for (var k in this.config.series)
+            {
+                this.addSerie(k, this.config.series[k]);
+            }
+        }
+
         this.render();
-}
+    }
 
-dataBoard_Figure.prototype.render = function()
-{
-    this.selector.find('.value').text(this.data.value);
-}
+    dataBoard_Figure.prototype.render = function()
+    {
+        for (var k in this.series)
+        {
+            this.series[k].$selector.text(this.series[k].value).attr('title', this.series[k].text);
+            this.series[k].$selector.data('color', this.series[k].color);
+        }
+    }
 
-dataBoard_Figure.prototype.push = function(data)
-{
-    this.data = data;
-    this.render();
-}
+    dataBoard_Figure.prototype.addSerie = function(name, serie)
+    {
+        var serie = $.extend(true, {
+            selector: null,
+            value: 0,
+            color: 'neutral',
+            text: null
+        }, serie );
+
+        if (serie.selector == null)
+            throw 'Figure-- serie need a selector';
+
+        serie.$selector = this.config.$selector.find(serie.selector);
+        this.series[name] = serie;
+    }
+
+    dataBoard_Figure.prototype.push = function(name, data)
+    {
+        this.series[name] = data;
+        this.render();
+    }
+
+    return dataBoard_Figure;
+})();
+
