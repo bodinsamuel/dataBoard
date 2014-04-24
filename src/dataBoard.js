@@ -255,7 +255,7 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
                     {
                         if (this.config.sources[i].period && this.config.sources[i].period.fillWithNull == true)
                         {
-                            var date = (Math.floor(parseInt(this.config.sources[i].lastUpdated/1000)/60) * 60000) + this.config.sources[i].period.interval ;
+                            var date = ((Math.floor(parseInt(this.config.sources[i].lastUpdated/1000)/60) * 60000));
                             this.chart.pushData.call(this, i, g, [[date, 0]]);
                         }
                     }
@@ -405,7 +405,7 @@ dataBoard.prototype.chart.pushData = function(i, g, datas)
         }
 
         // add a new point
-        this.config.modules.charts[i].instance.series[g].addPoint([datas[d][0], datas[d][1]]);
+        this.config.modules.charts[i].instance.series[g].addPoint([datas[d][0], datas[d][1]], true);
 
 
         // Remove last point if needed
