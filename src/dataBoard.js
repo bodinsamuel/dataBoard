@@ -463,6 +463,7 @@ dataBoard.prototype.figure = function(i)
 dataBoard.prototype.figure.pushData = function(i, data)
 {
     this.config.modules.figures[i].instance.push('main', data);
+    this.config.modules.figures[i].instance.render();
 }
 
 
@@ -537,6 +538,7 @@ var dataBoard_Figure = (function() {
         }
 
         this.series = {};
+        this.rendered = false;
 
         this.config = $.extend(true, {}, this.config, options);
 
@@ -554,15 +556,28 @@ var dataBoard_Figure = (function() {
         }
 
         this.render();
+        this.rendered = true;
+        this.changed = false;
     }
 
     dataBoard_Figure.prototype.render = function()
     {
+        if (this.config.animation.bg == true && this.rendered == true && this.changed ==  true)
+        {
+            this.config.$selector.effect('highlight', {'background-color': "rgba( 244, 226, 193, 0.1 )"}, 1000);
+        }
+
         for (var k in this.series)
         {
-            this.series[k].$selector.text(this.series[k].value).attr('title', this.series[k].text);
-            this.series[k].$selector.data('color', this.series[k].color);
+            if (this.config.animation.figure == true)
+                this.animatePush(this.series[k].$selector, parseInt(this.series[k].$selector.text()), parseInt(this.series[k].value), 1000);
+            else
+                this.series[k].$selector.text(this.series[k].value);
+            this.series[k].$selector.data('color', this.series[k].color)
+                                    .attr('title', this.series[k].text);
         }
+
+        this.changed = false;
     }
 
     dataBoard_Figure.prototype.addSerie = function(name, serie)
@@ -583,8 +598,29 @@ var dataBoard_Figure = (function() {
 
     dataBoard_Figure.prototype.push = function(name, data)
     {
-        this.series[name].value = parseInt(data.value);
-        this.render();
+        if (this.series[name].value != parseInt(data.value))
+        {
+            this.changed = true;
+            this.series[name].value = parseInt(data.value);
+        }
+    }
+
+    dataBoard_Figure.prototype.animatePush = function($selector, from, to, duration)
+    {
+        var range = to - from;
+        var current = from;
+        var way = (to > from) ? 1 : -1;
+        var stepTime = Math.abs(Math.floor(range / duration)) || 1;
+
+        var timer = setInterval(function() {
+            current += (stepTime * way) * 10;
+            $selector.text(current);
+            if ((current >= to && way > 0) || (current <= to && way < 0))
+            {
+                $selector.text(to);
+                clearInterval(timer);
+            }
+        }, 1);
     }
 
     return dataBoard_Figure;
