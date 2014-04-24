@@ -284,7 +284,8 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
 dataBoard.prototype.dataset = function (i, datas)
 {
     // Fill with null awesome
-    if (this.config.sources[i].describe.chart.xIsDate == true
+    if (this.config.sources[i].describe.chart
+        && this.config.sources[i].describe.chart.xIsDate == true
         && this.config.sources[i].period
         && this.config.sources[i].period.fillWithNull == true)
     {
@@ -592,7 +593,7 @@ var dataBoard_Figure = (function() {
         if (serie.selector == null)
             throw 'Figure-- serie need a selector';
 
-        serie.$selector = this.config.$selector.find(serie.selector);
+        serie.$selector = this.config.$selector.find(serie.selector + ' strong');
         this.series[name] = serie;
     }
 
