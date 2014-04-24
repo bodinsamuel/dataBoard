@@ -398,11 +398,16 @@ dataBoard.prototype.chart.pushData = function(i, g, datas)
             //Remove point
             this.config.modules.charts[i].instance.series[g].data[0].remove(false, false);
         }
+
+
+        if (this.config.modules.charts[i].defaultZoom)
+            dataBoard.prototype.chart.defaultZoom.call(this, i);
     }
 }
 
 dataBoard.prototype.chart.defaultZoom = function(i)
 {
+    console.log('set Default zoom for ', i , ' -- ', this.config.modules.charts[i].lastDate)
     var d = new Date();
     this.config.modules.charts[i].instance.xAxis[0].setExtremes(this.config.modules.charts[i].lastDate - this.config.modules.charts[i].defaultZoom, this.config.modules.charts[i].lastDate);
     this.config.modules.charts[i].instance.showResetZoom();
