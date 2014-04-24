@@ -249,10 +249,14 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
         {
             for (var i = 0; i < this.config.modules.figures.length; i++)
             {
-                var hasPath = this.config.modules.figures[i].use;
-                if (paths[hasPath])
+                for (var g in this.config.modules.figures[i].series)
                 {
-                    this.figure.pushData.call(this, i, this.dotToObject(this.config.modules.figures[i].use + '.data', datas)[0]);
+                    console.log(this.config.modules.figures[i].series[g]);
+                    var hasPath = this.config.modules.figures[i].series[g].use;
+                    if (paths[hasPath])
+                    {
+                        this.figure.pushData.call(this, i, this.dotToObject(this.config.modules.figures[i].series[g].use + '.data', datas)[0]);
+                    }
                 }
             }
         }
@@ -417,13 +421,12 @@ dataBoard.prototype.chart.area = dataBoard.prototype.chart.default;
 dataBoard.prototype.figure = function(i)
 {
     var config = this.config.modules.figures[i];
-    config.data = dataBoard.prototype.dotToObject(config.use + '.data', this.config.datasets);
+    for (var g in this.config.modules.figures[i].series)
+    {
+        config.series[g].data = dataBoard.prototype.dotToObject(config.series[g].use + '.data', this.config.datasets);
+    }
 
-    config.instance = new dataBoard_Figure({
-        renderTo: config.id,
-        data: config.data[0],
-        render: true
-    });
+    config.instance = new dataBoard_Figure(config);
     config.rendered = true;
 }
 
