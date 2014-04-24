@@ -5,7 +5,8 @@ var dataBoard_themes_default = {
         plotShadow: false,
         plotBorderWidth: 0
     },
-    colors: ['#058DC7','#ED561B','#e256ae','#E34A33','#e2cf56','#e25668','#e28956','#2CA25F','#56aee2'],
+    // colors: ['#058DC7','#ED561B','#e256ae','#E34A33','#e2cf56','#e25668','#e28956','#2CA25F','#56aee2'],
+    colors: ['#60BDCC', '#F8C49F', '#31D288', '#A693C9', '#F3565D'],
     credits: {
         enabled: false
     },
@@ -24,7 +25,7 @@ var dataBoard_themes_default = {
         style: {
             color: '#ffffff',
         },
-        snap: 10,
+        snap: 5,
         pointFormat: '{series.name}: <b>{point.y}</b><br/>',
         xDateFormat: '%A, %d %b %Y, %H:%M',
         crosshairs: {
@@ -36,6 +37,7 @@ var dataBoard_themes_default = {
     legend:{
         enabled: true,
         borderWidth: 0,
+        backgroundColor: '#ffffff',
         itemStyle: {
             fontSize:'11px'
         },
@@ -45,7 +47,9 @@ var dataBoard_themes_default = {
         symbolRadius: 0,
         align: 'right',
         verticalAlign: 'top',
-        floating: true
+        floating: true,
+        margin: 0,
+        y: -15
     },
     plotOptions: {
         series: {

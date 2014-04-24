@@ -6,7 +6,10 @@ function dataBoard(options)
         modules: {},
         sources: [],
         datasets: {},
-        interval: {}
+        interval: {},
+        date: {
+            offset: (new Date().getTimezoneOffset() * (60 * 1000))
+        }
     }
 
     this.config = $.extend(true, {}, this.config, options);
