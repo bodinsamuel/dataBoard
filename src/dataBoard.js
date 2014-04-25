@@ -319,10 +319,12 @@ dataBoard.prototype.dataset.fillWithNull = function(fromSource, datas)
     }
 
     var done = 0;
+    var now = new Date().getTime() - this.config.date.offset;
     for (var i = 0; i <= diff; i++)
     {
         interval += period.interval;
-        if (interval >= this.config.sources[fromSource].period.lastDate && period.lastPointIsEnd)
+        if ((interval >= this.config.sources[fromSource].period.lastDate && period.lastPointIsEnd)
+            || (interval >= now && period.nowIsEnd))
         {
             break;
         }
