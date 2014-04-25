@@ -115,13 +115,19 @@ dataBoard.prototype.sources = function (i, push)
                     that.config.interval[that.config.sources[i].name] = (function(that, i){
                         return setInterval(function(){
                             var now = new Date().getTime() - that.config.date.offset;
+
+                            // Try to clear interval if period is ended
+                            if (that.config.sources[i].period.stopReloadOnEnd && that.config.sources[i].period.end <= now)
+                            {
+                                clearInterval(that.config.interval[that.config.sources[i].name])
+                            }
+
                             that.config.sources[i].params.ttl = parseInt((that.config.sources[i].lastUpdated + that.config.date.offset) / 1000);
                             that.sources.call(that, i, true);
 
                             that.config.sources[i].lastUpdated = now;
                         }, parseInt(that.config.sources[i].ttl));
                     }(that, i));
-                    console.log(that.config.interval);
                 }
             }
         }
