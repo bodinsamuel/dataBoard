@@ -80,10 +80,12 @@ dataBoard.prototype.sources = function (i, push)
     var that = this;
     if (!that.config.sources[i].params)
         that.config.sources[i].params = {};
+
     if (!that.config.sources[i].lastUpdated)
-    {
         that.config.sources[i].lastUpdated = new Date().getTime() - that.config.date.offset;
-    }
+
+    that.config.sources[i].params.period = that.config.sources[i].period;
+    that.config.sources[i].params.push = push;
 
     $.ajax({
         async: false,
@@ -104,7 +106,7 @@ dataBoard.prototype.sources = function (i, push)
             // Push or create dataset
             if (push === true)
             {
-                dataBoard.prototype.sources.pushToModules.call(that, that.config.sources[i].name, series);
+                dataBoard.prototype.sources.pushToModules.call(that, that.config.sources[i].name, series, i);
             }
             else
             {
@@ -117,7 +119,8 @@ dataBoard.prototype.sources = function (i, push)
                             var now = new Date().getTime() - that.config.date.offset;
 
                             // Try to clear interval if period is ended
-                            if (that.config.sources[i].period.stopReloadOnEnd && that.config.sources[i].period.end <= now)
+                            if (that.config.sources[i].period.stopReloadOnEnd
+                                && (that.config.sources[i].period.end - that.config.date.offset) <= now)
                             {
                                 clearInterval(that.config.interval[that.config.sources[i].name])
                             }
@@ -208,7 +211,6 @@ dataBoard.prototype.sources.processFromDescribe.figures = function(i, data)
         return series;
 
     var key_name = (figures[0].name) ? 'name' : describe.name;
-    var key_value = (figures[0].value) ? 'value' : describe.value;
     for (var i = 0; i < figures.length; i++)
     {
         if (figures[i][key_name] == null)
@@ -219,13 +221,19 @@ dataBoard.prototype.sources.processFromDescribe.figures = function(i, data)
         if (typeof series[name] == 'undefined')
             series[name] = [];
 
-        series[name] = {value: figures[i][key_value]};
+        var serie = {};
+        for (var g = describe.type.length - 1; g >= 0; g--)
+        {
+            serie[describe.type[g]] = figures[i][describe.type[g]] || 0
+        }
+
+        series[name] = serie;
     }
 
     return series;
 }
 
-dataBoard.prototype.sources.pushToModules = function(name, series)
+dataBoard.prototype.sources.pushToModules = function(name, series, fromSource)
 {
     var paths = {};
     for (subname in series)
@@ -251,6 +259,10 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
             {
                 for (var g = 0; g < this.config.modules.charts[i].series.length; g++)
                 {
+                    var useSource = this.getSourceFromName( this.config.modules.charts[i].series[g].use.split('.')[0]);
+                    if (useSource !== fromSource)
+                        continue;
+
                     var hasPath = this.config.modules.charts[i].series[g].use;
 
                     if (paths[hasPath])
@@ -259,9 +271,9 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
                     }
                     else
                     {
-                        if (this.config.sources[i].period && this.config.sources[i].period.fillWithNull == true)
+                        if (this.config.sources[fromSource].period && this.config.sources[fromSource].period.fillWithNull == true)
                         {
-                            var date = ((Math.floor(parseInt(this.config.sources[i].lastUpdated/1000)/60) * 60000));
+                            var date = ((Math.floor(parseInt(this.config.sources[fromSource].lastUpdated/1000)/60) * 60000));
                             this.chart.pushData.call(this, i, g, [[date, 0]]);
                         }
                     }
@@ -276,10 +288,23 @@ dataBoard.prototype.sources.pushToModules = function(name, series)
             {
                 for (var g in this.config.modules.figures[i].series)
                 {
+                    var useSource = this.getSourceFromName( this.config.modules.figures[i].series[g].use.split('.')[0]);
+                    if (useSource !== fromSource)
+                        continue;
+
                     var hasPath = this.config.modules.figures[i].series[g].use;
                     if (paths[hasPath])
                     {
                         this.figure.pushData.call(this, i, this.dotToObject(this.config.modules.figures[i].series[g].use, datas));
+                    }
+                    else
+                    {
+                        if (this.config.sources[fromSource].period
+                            && this.config.sources[fromSource].period.fillWithNull == true
+                            && this.config.modules.figures[i].series[g].type == "now")
+                        {
+                            this.figure.pushData.call(this, i, 0);
+                        }
                     }
                 }
             }
@@ -462,7 +487,7 @@ dataBoard.prototype.figure = function(i)
     var config = this.config.modules.figures[i];
     for (var g in this.config.modules.figures[i].series)
     {
-        config.series[g].value = dataBoard.prototype.dotToObject(config.series[g].use, this.config.datasets).value;
+        config.series[g].value = parseInt(dataBoard.prototype.dotToObject(config.series[g].use, this.config.datasets)) || 0;
     }
 
     config.instance = new dataBoard_Figure(config);
@@ -471,7 +496,7 @@ dataBoard.prototype.figure = function(i)
 
 dataBoard.prototype.figure.pushData = function(i, data)
 {
-    this.config.modules.figures[i].instance.push('main', data);
+    this.config.modules.figures[i].instance.push('main', data || 0);
     this.config.modules.figures[i].instance.render();
 }
 
@@ -569,6 +594,12 @@ var dataBoard_Figure = (function() {
         this.changed = false;
     }
 
+    dataBoard_Figure.prototype.destroy = function()
+    {
+        clearInterval(this.config.interval);
+        this.config = null;
+    }
+
     dataBoard_Figure.prototype.render = function()
     {
         if (this.config.animation.bg == true && this.rendered == true && this.changed ==  true)
@@ -595,7 +626,8 @@ var dataBoard_Figure = (function() {
             selector: null,
             value: 0,
             color: 'neutral',
-            text: null
+            text: null,
+            type: 'total'
         }, serie );
 
         if (serie.selector == null)
@@ -607,10 +639,13 @@ var dataBoard_Figure = (function() {
 
     dataBoard_Figure.prototype.push = function(name, data)
     {
-        if (this.series[name].value != parseInt(data.value))
+        if (this.series[name].value != parseInt(data))
         {
             this.changed = true;
-            this.series[name].value = parseInt(data.value);
+            if (this.series[name].type === 'total' || this.series[name].type === 'now')
+                this.series[name].value = parseInt(data) || 0;
+            else if (this.series[name].type === 'increment')
+                this.series[name].value = parseInt(this.series[name].value) + (parseInt(data) || 0);
         }
     }
 
@@ -620,18 +655,22 @@ var dataBoard_Figure = (function() {
         var current = from;
         var way = (to > from) ? 1 : -1;
         var stepTime = Math.abs(Math.floor(range / duration)) || 1;
+        var _duration = 0;
 
-        var timer = setInterval(function() {
+        var interval = setInterval(function() {
+            _duration += 1;
             current += (stepTime * way) * 10;
             $selector.text(current);
-            if ((current >= to && way > 0) || (current <= to && way < 0))
+            if ((current >= to && way > 0) || (current <= to && way < 0) || _duration >= duration)
             {
                 $selector.text(to);
-                clearInterval(timer);
+                clearInterval(interval);
             }
         }, 1);
+        this.config.interval = interval;
     }
 
+
+    dataBoard.themes['default'] = dataBoard_themes_default;
     return dataBoard_Figure;
 })();
-
