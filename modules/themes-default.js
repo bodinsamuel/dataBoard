@@ -90,7 +90,9 @@ var dataBoard_themes_default = {
                 color: '#8B8686',
             }
         },
-        tickLength: 8
+        tickLength: 8,
+        min: 0,
+        startOnTick: true
     },
     xAxis: [{
         title: {
@@ -102,8 +104,6 @@ var dataBoard_themes_default = {
             },
             y: 22
         },
-        tickLength: 10,
+        tickLength: 10
     }],
 };
-
-dataBoard.themes['default'] = dataBoard_themes_default;
